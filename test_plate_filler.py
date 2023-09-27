@@ -28,7 +28,12 @@ class TestPlateFiller(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             self.plate_filler.validate_samples(["string"])
         self.assertEqual(str(context.exception), "Each element of samples should be a list of strings.")
-    
+
+    def test_validate_samples_with_duplicated_samples_in_experiment(self):
+        with self.assertRaises(ValueError) as context:
+            self.plate_filler.validate_samples([['Sam 1', 'Sam 1']])
+        self.assertEqual(str(context.exception), "An experiment has reoccuring samples, please validate the input. Sample duplication is not allowed within the experiments.")
+
     def test_validate_reagents_with_non_list(self):
         with self.assertRaises(ValueError) as context:
             self.plate_filler.validate_reagents("string")
@@ -39,6 +44,11 @@ class TestPlateFiller(unittest.TestCase):
             self.plate_filler.validate_reagents(["string"])
         self.assertEqual(str(context.exception), "Each element of reagents should be a list of strings.")
     
+    def test_validate_reagents_with_duplicated_reagents_in_experiment(self):
+        with self.assertRaises(ValueError) as context:
+            self.plate_filler.validate_reagents([['Reag A', 'Reag A']])
+        self.assertEqual(str(context.exception), "An experiment has reoccuring reagents, please validate the input. Reagent duplication is not allowed within the experiments.")
+
     def test_validate_replicas_with_non_list(self):
         with self.assertRaises(ValueError) as context:
             self.plate_filler.validate_replicas("string")

@@ -57,7 +57,7 @@ class PlateFiller:
             if not isinstance(reagent_list, list):
                 raise ValueError("Each element of reagents should be a list of strings.")
             if len(reagent_list) != len(set(reagent_list)):
-                raise ValueError("An experiment has reoccuring reagents, please validate the input. Reagent duplication is not allowed within the experiments.") # Not a requirement, but seems sensible.
+                raise ValueError("An experiment has reoccuring reagents, please validate the input. Reagent duplication is not allowed within the experiments.") 
             for reagent in reagent_list:
                 if not isinstance(reagent, str):
                     raise ValueError(f"Expected a string reagent, but got {type(reagent)} instead.")
