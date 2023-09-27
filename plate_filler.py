@@ -103,8 +103,8 @@ class PlateFiller:
     # Compare both microplate plans, prefer grouped reagents over grouped samples
     def evaluate_microplate_penalty(self, plates):
         penalty = 0
+        previous_sample, previous_reagent = plates[0][0][0]
         for plate in plates:
-            previous_sample, previous_reagent = plate[0][0]
             for row in plate:
                 for well in row:
                     if any(well):
@@ -120,9 +120,10 @@ class PlateFiller:
     def create_empty_plate(self):
         return [[[None] for _ in range(self.number_of_columns)] for _ in range(self.number_of_rows)]
 
-    def fill_plates(self, plate, items):
+    def fill_plates(self, items):
         current_well = 0
         plates = []
+        plate = self.create_empty_plate()
         for sample, reagent in items:
             if current_well == self.plate_size:
                 plates.append(plate)
@@ -150,21 +151,19 @@ class PlateFiller:
                     sample_counter[sample] += exp_replicas
                     reagent_counter[reagent] += exp_replicas
 
-        plate = self.create_empty_plate()
         items_by_reagent = []
         for reagent in reagent_counter:
             for sample, freq in sorted(samples_per_reagent_counter[reagent].most_common()):
                 for _ in range(freq):
                     items_by_reagent.append([sample, reagent])
-        group_by_reagent_result = self.fill_plates(plate, items_by_reagent)
+        group_by_reagent_result = self.fill_plates(items_by_reagent)
 
-        plate = self.create_empty_plate()
         items_by_sample = []
         for sample in sample_counter:
             for reagent, freq in sorted(reagents_per_sample_counter[sample].most_common()):
                 for _ in range(freq):
                     items_by_sample.append([sample, reagent])    
-        group_by_sample_result = self.fill_plates(plate, items_by_sample)
+        group_by_sample_result = self.fill_plates(items_by_sample)
 
         self.plates = group_by_reagent_result if self.evaluate_microplate_penalty(group_by_sample_result) >= self.evaluate_microplate_penalty(group_by_reagent_result) else group_by_sample_result
     
