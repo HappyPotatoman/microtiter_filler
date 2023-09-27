@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from plate_filler import PlateFiller, PlateFillError
 
 class TestPlateFiller(unittest.TestCase):
@@ -101,6 +102,54 @@ class TestPlateFiller(unittest.TestCase):
         self.plate_filler.replicas = [12]
         with self.assertRaises(PlateFillError):
             self.plate_filler.check_if_enough_plates()
+
+    def test_create_empty_plate(self):
+        self.plate_filler.number_of_rows = 3
+        self.plate_filler.number_of_columns = 2
+        expected_plate = [[[None], [None]], [[None], [None]], [[None], [None]]]
+        self.assertEqual(self.plate_filler.create_empty_plate(), expected_plate)
+
+    def test_fill_plates(self):
+        self.plate_filler.number_of_rows = 2
+        self.plate_filler.number_of_columns = 2
+        self.plate_filler.plate_size = 4
+        
+        items = [('sample1', 'reagent1'), ('sample2', 'reagent2'), ('sample3', 'reagent3'), ('sample4', 'reagent4'), ('sample5', 'reagent5')]
+        
+        expected_filled_plate1 = [[['sample1', 'reagent1'], ['sample2', 'reagent2']], [['sample3', 'reagent3'], ['sample4', 'reagent4']]]
+        expected_filled_plate2 = [[['sample5', 'reagent5'], [None]], [[None], [None]]]
+        
+        result = self.plate_filler.fill_plates(items)
+
+        self.assertEqual(result, [expected_filled_plate1, expected_filled_plate2])
+
+    def test_evaluate_microplate_penalty(self):
+        plate_grouped_by_samples = [[['sample1', 'reagent1'], ['sample1', 'reagent2']],
+                  [['sample2', 'reagent1'], ['sample2', 'reagent2']]]
+
+        expected_penalty_grouped_by_samples = 0 + 1.5 + 2.5 + 1.5
+
+        result_by_samples = self.plate_filler.evaluate_microplate_penalty([plate_grouped_by_samples])
+
+        self.assertEqual(result_by_samples, expected_penalty_grouped_by_samples)
+
+        plate_grouped_by_reagents = [[['sample1', 'reagent1'], ['sample2', 'reagent1']],
+                  [['sample1', 'reagent2'], ['sample2', 'reagent2']]]
+
+        expected_penalty_grouped_by_reagents = 0 + 1 + 2.5 + 1
+
+        result_by_reagents = self.plate_filler.evaluate_microplate_penalty([plate_grouped_by_reagents])
+
+        self.assertEqual(result_by_reagents, expected_penalty_grouped_by_reagents)
+        self.assertGreater(result_by_samples, result_by_reagents)
+
+    def test_plot_plates_warning(self):
+        self.plate_filler.plates = []
+
+        with self.assertWarns(Warning) as context:
+            self.plate_filler.plot_plates()
+
+        self.assertIn('No plates to display. Try calling group_related_experiments first.', str(context.warning))
 
 if __name__ == '__main__':
     unittest.main()
